@@ -73,7 +73,7 @@ train_image_label_folder = os.path.join(VH_INPUTS_DIR, 'ADE20K/ADEChallengeData2
 val_image_folder = os.path.join(VH_INPUTS_DIR, 'ADE20K/ADEChallengeData2016', 'images/validation')
 val_image_label_folder = os.path.join(VH_INPUTS_DIR, 'ADE20K/ADEChallengeData2016', 'annotations/validation')
 
-def _convert_dataset(dataset_split, dataset_dir, dataset_label_dir):
+def _convert_dataset(dataset_split, dataset_dir, dataset_label_dir, zipObj):
   """Converts the ADE20k dataset into into tfrecord format.
 
   Args:
@@ -127,6 +127,7 @@ def _convert_dataset(dataset_split, dataset_dir, dataset_label_dir):
             image_data, img_names[i], height, width, seg_data)
         tfrecord_writer.write(example.SerializeToString())
     sys.stdout.write('\n')
+    zipObj.write(output_filename)
     sys.stdout.flush()
 
 
