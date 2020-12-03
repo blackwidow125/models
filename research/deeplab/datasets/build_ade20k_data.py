@@ -26,6 +26,8 @@ import sys
 import build_data
 from six.moves import range
 import tensorflow as tf
+import zipfile
+from zipfile import ZipFile
 
 FLAGS = tf.app.flags.FLAGS
 
@@ -54,6 +56,22 @@ tf.app.flags.DEFINE_string(
 
 _NUM_SHARDS = 4
 
+VH_INPUTS_DIR = os.getenv('VH_INPUTS_DIR')
+VH_OUTPUTS_DIR = os.getenv('VH_OUTPUTS_DIR')
+
+dataset = os.path.join(VH_INPUTS_DIR, 'ADE20K/ADEChallengeData2016.zip')
+
+# Open the zip-file and extract all the files
+# The sample dataset zip file is structured in a way that the files will get extracted to a ADEChallengeData2016 folder
+with zipfile.ZipFile(dataset, 'r') as zip_ref:
+    zip_ref.extractall(os.path.join(VH_INPUTS_DIR, 'ADE20K'))
+
+# Get paths to each folder
+# https://github.com/tensorflow/models/blob/master/research/deeplab/g3doc/ade20k.md#recommended-directory-structure-for-training-and-evaluation
+train_image_folder = os.path.join(VH_INPUTS_DIR, 'ADE20K/ADEChallengeData2016', 'images/training')
+train_image_label_folder = os.path.join(VH_INPUTS_DIR, 'ADE20K/ADEChallengeData2016', 'annotations/training')
+val_image_folder = os.path.join(VH_INPUTS_DIR, 'ADE20K/ADEChallengeData2016', 'images/validation')
+val_image_label_folder = os.path.join(VH_INPUTS_DIR, 'ADE20K/ADEChallengeData2016', 'annotations/validation')
 
 def _convert_dataset(dataset_split, dataset_dir, dataset_label_dir):
   """Converts the ADE20k dataset into into tfrecord format.
@@ -113,11 +131,14 @@ def _convert_dataset(dataset_split, dataset_dir, dataset_label_dir):
 
 
 def main(unused_argv):
-  tf.gfile.MakeDirs(FLAGS.output_dir)
-  _convert_dataset(
-      'train', FLAGS.train_image_folder, FLAGS.train_image_label_folder)
-  _convert_dataset('val', FLAGS.val_image_folder, FLAGS.val_image_label_folder)
-
+  #tf.gfile.MakeDirs(FLAGS.output_dir)
+  #_convert_dataset(
+  #    'train', FLAGS.train_image_folder, FLAGS.train_image_label_folder)
+  #_convert_dataset('val', FLAGS.val_image_folder, FLAGS.val_image_label_folder)
+  zipObj = ZipFile(os.path.join(VH_OUTPUTS_DIR, 'tfrecords.zip'), 'w')  
+  _convert_dataset('train', train_image_folder, train_image_label_folder, zipObj)
+  _convert_dataset('val', val_image_folder, val_image_label_folder, zipObj)
+  zipObj.close()
 
 if __name__ == '__main__':
   tf.app.run()
